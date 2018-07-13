@@ -74,6 +74,75 @@ archivePrefix = "arXiv",
   adsnote = {Provided by the SAO/NASA Astrophysics Data System}
 }
 
+# Time seq action recognition
+
+@article{unsup_time_seq_action_recognition,
+  author    = {Zelun Luo and
+               Boya Peng and
+               De{-}An Huang and
+               Alexandre Alahi and
+               Li Fei{-}Fei},
+  title     = {Unsupervised Learning of Long-Term Motion Dynamics for Videos},
+  journal   = {CoRR},
+  volume    = {abs/1701.01821},
+  year      = {2017},
+  url       = {http://arxiv.org/abs/1701.01821},
+  archivePrefix = {arXiv},
+  eprint    = {1701.01821},
+  timestamp = {Wed, 07 Jun 2017 14:42:29 +0200},
+  biburl    = {https://dblp.org/rec/bib/journals/corr/LuoPHAF17},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+@article{action_matching,
+  author    = {Basura Fernando and
+               Sareh Shirazi and
+               Stephen Gould},
+  title     = {Unsupervised Human Action Detection by Action Matching},
+  journal   = {CoRR},
+  volume    = {abs/1612.00558},
+  year      = {2016},
+  url       = {http://arxiv.org/abs/1612.00558},
+  archivePrefix = {arXiv},
+  eprint    = {1612.00558},
+  timestamp = {Wed, 07 Jun 2017 14:40:19 +0200},
+  biburl    = {https://dblp.org/rec/bib/journals/corr/FernandoSG16},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+@article{review_action_recognition,
+  author    = {Soo{-}Min Kang and
+               Richard P. Wildes},
+  title     = {Review of Action Recognition and Detection Methods},
+  journal   = {CoRR},
+  volume    = {abs/1610.06906},
+  year      = {2016},
+  url       = {http://arxiv.org/abs/1610.06906},
+  archivePrefix = {arXiv},
+  eprint    = {1610.06906},
+  timestamp = {Wed, 07 Jun 2017 14:42:07 +0200},
+  biburl    = {https://dblp.org/rec/bib/journals/corr/KangW16},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+# Ancestral action recognition
+@incollection{plan_recognition,
+ author = {Kautz, Henry A.},
+ chapter = {A Formal Theory of Plan Recognition and Its Implementation},
+ title = {Reasoning About Plans},
+ editor = {Brachman, Ronald J. and Allen, James F. and Kautz, Henry A. and Pelavin, Richard N. and Tenenberg, Josh D.},
+ year = {1991},
+ isbn = {1-55860-137-6},
+ pages = {69--124},
+ numpages = {56},
+ url = {http://dl.acm.org/citation.cfm?id=117019.117021},
+ acmid = {117021},
+ publisher = {Morgan Kaufmann Publishers Inc.},
+ address = {San Francisco, CA, USA},
+} 
+
+# Dataset
+
 @article{HiH,
   author    = {Gunnar A. Sigurdsson and
                G{\"{u}}l Varol and
@@ -93,7 +162,34 @@ archivePrefix = "arXiv",
   bibsource = {dblp computer science bibliography, https://dblp.org}
 }
 
+@article{ActivityNet, 
+author={F. C. Heilbron and V. Escorcia and B. Ghanem and J. C. Niebles}, 
+booktitle={2015 IEEE Conference on Computer Vision and Pattern Recognition (CVPR)}, 
+title={ActivityNet: A large-scale video benchmark for human activity understanding}, 
+year={2015}, 
+volume={}, 
+number={}, 
+pages={961-970}, 
+keywords={computer vision;gesture recognition;image classification;image motion analysis;object detection;video signal processing;ActivityNet;actions complexity;actions variability;activity classes;activity detection;complex human activities;computer vision algorithms;human action recognition;human activity understanding;large-scale video benchmark;trimmed activity classification;untrimmed video classification;Benchmark testing;Cleaning;Complexity theory;Organizations;Semantics;Taxonomy;YouTube}, 
+doi={10.1109/CVPR.2015.7298698}, 
+ISSN={1063-6919}, 
+month={June},}
 
+@article{hollywood2,
+    author = "Marcin Marsza{\l}ek and Ivan Laptev and Cordelia Schmid",
+    title = "Actions in Context",
+    booktitle = "IEEE Conference on Computer Vision \& Pattern Recognition",
+    year = "2009"
+}
+
+@article{sports_video_dataset, 
+  author = { Seyed Morteza Safdarnejad and Xiaoming Liu and Lalita Udpa and Brooks Andrus and John Wood and Dean Craven },
+  title = { Sports Videos in the Wild (SVW): A Video Dataset for Sports Analysis },
+  booktitle = { Proc. International Conference on Automatic Face and Gesture Recognition },
+  address = { Ljubljana, Slovenia },
+  month = { May },
+  year = { 2015 },
+}
 
 # Softwares
 
@@ -168,4 +264,21 @@ archivePrefix = "arXiv",
     school = {Computer Science department, Technische Universitaet Muenchen, Germany}, 
     year = {2009}, 
     month = {October} 
+}
+
+@Article{rtabmap,
+author="Labb{\'e}, Mathieu
+and Michaud, Fran{\c{c}}ois",
+title="Long-term online multi-session graph-based SPLAM with memory management",
+journal="Autonomous Robots",
+year="2018",
+month="Aug",
+day="01",
+volume="42",
+number="6",
+pages="1133--1150",
+abstract="For long-term simultaneous planning, localization and mapping (SPLAM), a robot should be able to continuously update its map according to the dynamic changes of the environment and the new areas explored. With limited onboard computation capabilities, a robot should also be able to limit the size of the map used for online localization and mapping. This paper addresses these challenges using a memory management mechanism, which identifies locations that should remain in a Working Memory (WM) for online processing from locations that should be transferred to a Long-Term Memory (LTM). When revisiting previously mapped areas that are in LTM, the mechanism can retrieve these locations and place them back in WM for online SPLAM. The approach is tested on a robot equipped with a short-range laser rangefinder and a RGB-D camera, patrolling autonomously 10.5 km in an indoor environment over 11 sessions while having encountered 139 people.",
+issn="1573-7527",
+doi="10.1007/s10514-017-9682-5",
+url="https://doi.org/10.1007/s10514-017-9682-5"
 }

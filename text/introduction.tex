@@ -1,19 +1,38 @@
 \chapter{Introduction}
 
-Principium autem unde latius se funditabat, emersit ex negotio tali. Chilo ex vicario et coniux eius Maxima nomine, questi apud Olybrium ea tempestate urbi praefectum, vitamque suam venenis petitam adseverantes inpetrarunt ut hi, quos suspectati sunt, ilico rapti conpingerentur in vincula, organarius Sericus et Asbolius palaestrita et aruspex Campensis.
+In this work, we try to perform unsupervised action recognition based on spatial context information in a domestic robot environment. In this section, we will describe the exact task and its context, before defining the objectives of this study and introducing our contribution.
 
 \section{Background}
-\subsection{Lorem}
-Principium autem unde latius se funditabat, emersit ex negotio tali. Chilo ex vicario et coniux eius Maxima nomine, questi apud Olybrium ea tempestate urbi praefectum, vitamque suam venenis petitam adseverantes inpetrarunt ut hi, quos suspectati sunt, ilico rapti conpingerentur in vincula, organarius Sericus et Asbolius palaestrita et aruspex Campensis.
+\subsection{Unsupervised Action Recognition}
+Action recognition and detection is a major problem in computer vision \cite{review_action_recognition}. It has been an active research field since the 1990s \cite{plan_recognition}, but it has gained special attention like most of the other computer vision tasks in the 2010s \textbf{[ref necessary]}, as the performance of these techniques improved a lot with generalisation of deep learning and since large scale datasets became more easily obtainable.
 
-\subsection{Ipsum}
-Principium autem unde latius se funditabat, emersit ex negotio tali. Chilo ex vicario et coniux eius Maxima nomine, questi apud Olybrium ea tempestate urbi praefectum, vitamque suam venenis petitam adseverantes inpetrarunt ut hi, quos suspectati sunt, ilico rapti conpingerentur in vincula, organarius Sericus et Asbolius palaestrita et aruspex Campensis.
+The proper goal of action recognition is, given a visual input consisting of a single frame or a video, to predict a classification result for the actions in this input. Formally speaking, another field of research named action detection also exist. Its goal is to locate one or a set of actions of interest in both space and time, for instance by outputting Region Of Interest (ROI) corresponding to each detected action on the input frames.
+This distinction between recognition and detection is similar to the one existing in the field of object classification / detection or others, however in practice this distinction is often ignored in the litterature as most modern algorithms try to carry both tasks. For the scope of this thesis, we will therefore call Action Recognition the set composed of both the tasks of action recognition and action detection.
+\vspace{12pt}
+
+Like most machine learning applications, action recognition can be roughly divided in two different categories: supervised and unsupervised. Supervised action recognition makes use of a labeled video dataset \cite{hollywood2,sports_video_dataset,ActivityNet} to detect a limited amount of actions and classify them explicitly. These types of algorithms achieve state of the art accuracy on benchmarks based on the aforementionned datasets. However, labeled video datasets are quite difficult to find since the labeling process is really heavy. Another flaw of these datasets is that even if their size in term of number of frames may seem huge, a lot of these frames actually come from the same video, resulting in a poor diversity among these frames.
+
+On the other hand, unsupervised action recognition algorithms try to achieve the same task without using a labeled dataset. Its main advantage is that it can make use of a far wider range of datasets such as Youtube\footnote{http://www.youtube.com} videos, which can lead these algorithms to generalize better. However, since their input dataset is not labeled, they cannot issue an explicit classification of the different actions performed, but instead output a set of clusters of actions. These clusters may then be classified afterward in order to test these algorithms on labeled benchmarks, but this only reveal a small part of the knowledge acquired by the trained models.
+
+\subsection{Domestic Robot Environment}
+The software described in this work is supposed to be used in a domestic robot environment. We describe here what we mean by using that term.
+
+A domestic robot is a type of indoor service robot that is mainly used for house chores, housekeeping, but also entertainment or therapy.
+As opposed to industrial robots, which are designed to carry out a limited amount of specific tasks in well-designated environment such as a production chain in a factory or a warehouse, domestic robot need to be more generalistic.
+
+Indeed, they should be able to evolve in the small and somewhat chaotic environment that are individual appartments or houses. Since they are also designed to assist their owners in tasks from everyday life, they also need to be more flexible and to adapt to a large number of situations.
 
 \section{Objectives}
-Principium autem unde latius se funditabat, emersit ex negotio tali. Chilo ex vicario et coniux eius Maxima nomine, questi apud Olybrium ea tempestate urbi praefectum, vitamque suam venenis petitam adseverantes inpetrarunt ut hi, quos suspectati sunt, ilico rapti conpingerentur in vincula, organarius Sericus et Asbolius palaestrita et aruspex Campensis.
+The goal of this work is primarily to implement action recognition on a domestic robot. Considering the chaotic and diverse environment in which that domestic robot evolves, and since there is currently no labeled dataset of videos containing action diverse enough to be realistically used to detect domestic actions, we decided in the begining to use unsupervised clustering applied to the output of a body part detection algorithm to tackle this task. The output of this workflow is a set of static human pose clusters. 
+
+From there, the main trend in the litterature is to make use of the temporal consistency of the videos to refine the action clustering. However, since we work with a robot we have access to a lot more of spatial context data, like depth and odometry. Therefore, we decided to focus on the use of these spatial features to improve the action clustering.
 
 \section{Contributions}
-Principium autem unde latius se funditabat, emersit ex negotio tali. Chilo ex vicario et coniux eius Maxima nomine, questi apud Olybrium ea tempestate urbi praefectum, vitamque suam venenis petitam adseverantes inpetrarunt ut hi, quos suspectati sunt, ilico rapti conpingerentur in vincula, organarius Sericus et Asbolius palaestrita et aruspex Campensis.
+The main contribution of this work is the development of a complete robotics platform for action recognition using spatial context. By using it, one can simultaneously perform the tasks of robot control, pointcloud generation, environment mapping and navigation, registration of the history of human/environment interactions - what we call an \emph{action map} - and finally action recognition.
+
+This platform is built on top of ROS \cite{ROS}, a widely distributed open-source framework for robotics programming. ROS programs, also called nodes, are by nature supposed to work in real-time on a network and therefore this work is easily generalisable to a wide range of configurations, which can for example include long distance control or parallel processing of multiple robots.
+
+An additional contribution resides in our experiments and results. They contribute to the understanding of the advantages and limit of spatial context informations for unlabeled action recognition, a field that was in the limit of our knowledge almost not studied in the past. 
 
 \section{Outline}
-Principium autem unde latius se funditabat, emersit ex negotio tali. Chilo ex vicario et coniux eius Maxima nomine, questi apud Olybrium ea tempestate urbi praefectum, vitamque suam venenis petitam adseverantes inpetrarunt ut hi, quos suspectati sunt, ilico rapti conpingerentur in vincula, organarius Sericus et Asbolius palaestrita et aruspex Campensis.
+The rest of this document is structured as follows. In chapter \ref{chap:relwork}, we review related works in the domains of action recognition and action mapping, then in chapter \ref{chap:archi} we introduce our proposed workflow architecture to tackle this problem given our work environment and describe the current implementation of the system. In chapter \ref{chap:experiments} we report the experiments we conducted on the platform and discuss the obtained results in chapter \ref{chap:discussion}. We conclude and introduce proposals of future work in chapter \ref{chap:conclusion}. 
