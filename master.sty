@@ -1,0 +1,72 @@
+\typeout{Document Style `master' for master thesis version 1.2}
+
+% NTT-ASCII auto configuration by HIROSE yuuji 1992-11-21
+%\ifx\gtfam\undefined
+%\input j-report.sty\relax
+%\else
+%\input jreport.sty\relax
+\def\@chapapp#1{Chapter \lower.1ex\hbox{#1}}
+%\def\thebibliography#1{\chapter*{Bibliography}}\list
+% {[\arabic{enumi}]}{\settowidth\labelwidth{[#1]}\leftmargin\labelwidth
+% \advance\leftmargin\labelsep
+% \usecounter{enumi}}
+% \def\newblock{\hskip .11em plus .33em minus .07em}
+% \sloppy
+% \sfcode`\.=1000\relax}
+%\fi
+
+%\input master1\@ptsize.sty\relax
+\def\ps@myheadings{\let\@mkboth\@gobbletwo
+\def\@oddhead{\hbox{}\rightmark\,\hrulefill\,
+\rm\thepage}\def\@oddfoot{\hrulefill}\def\@evenhead{\rm \thepage\hfil\leftmark\hbox
+{}}\def\@evenfoot{}\def\chaptermark##1{}
+\def\sectionmark##1{}\def\subsectionmark##1{}}
+\def\@makechapterhead#1{\thispagestyle{empty}\pagestyle{myheadings}
+ \vspace*{100pt}\hrule height 2pt\vskip 40pt
+{ \parindent 0pt \raggedright
+ \ifnum \c@secnumdepth >\m@ne \LARGE\bf \@chapapp{\thechapter} \par 
+ \vskip 20pt \fi \LARGE \bf #1\par 
+ \nobreak \vskip 40pt \hrule height %
+2pt\eject\markright{{\bf \@chapapp{\thechapter}}\ #1} } }
+\def\chapter{\clearpage \thispagestyle{plain} \global\@topnum\z@
+\@afterindenttrue \secdef\@chapter\@schapter} 
+\def\@chapter[#1]#2{\ifnum \c@secnumdepth >\m@ne
+ \refstepcounter{chapter}
+
+ \typeout{Chapter \thechapter}
+ \addcontentsline{toc}{chapter}{\protect
+ \numberline{\thechapter}#1}\else
+ \addcontentsline{toc}{chapter}{#1}\fi
+ \chaptermark{#1}
+ \addtocontents{lof}{\protect\addvspace{10pt}}
+\addtocontents{lot}{\protect\addvspace{10pt}} \if@twocolumn
+\@topnewpage[\@makechapterhead{#2}] 
+ \else \@makechapterhead{#2}
+ \@afterheading \fi}
+\def\@schapter#1{\if@twocolumn \@topnewpage[\@makeschapterhead{#1}]
+ \else \@makeschapterhead{#1} \thispagestyle{plain}\pagestyle{plain}
+ \@afterheading\fi\typeout{#1}\markright{{\bf #1}}}
+\newif\ifskipRoman\skipRomanfalse
+\def\Roman#1{\pagenumbering{roman}\ifskipRoman\relax\else#1\fi
+  \eject\setcounter{page}{0}\pagenumbering{arabic}}
+
+\def\fnum@figure{Figure \thefigure}
+\def\fnum@table{Table \thetable}
+
+% size
+\topmargin=5mm
+\textheight=23cm
+\textwidth=15.5cm
+\footskip=.5cm
+\oddsidemargin=1cm
+\renewcommand{\baselinestretch}{1.1}
+%%\jintercharskip=0pt plus 2pt
+\def\sqlist{
+  \def\@listI{\leftmargin=\leftmargini\parsep=0pt\itemsep=0pt\topsep=0pt}
+  \def\@listii{\leftmargin=\leftmargini\parsep=0pt\itemsep=0pt\topsep=0pt}
+  \def\@listiii{\leftmargin=\leftmargini\parsep=0pt\itemsep=0pt\topsep=0pt}
+  \let\@listi\@listI}
+\def\normallist{\def\@listI{\leftmargin\leftmargini
+  \parsep 5pt plus 2.5pt minus 1pt\topsep
+  10pt plus 4pt minus 6pt\itemsep 5pt plus 2.5pt minus
+1pt}\let\@listi\@listI}
