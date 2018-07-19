@@ -7,14 +7,19 @@
     "telemetry.enableTelemetry": false,
     "cSpell.language": "en,en-US,en-GB",
     "cSpell.words": [
+      "freenec",
+      "freenect",
+      "iros",
       "kinect",
       "kobuki",
       "libfreenect",
       "odometry",
       "openpose",
       "ransac",
+      "rtabmap",
       "soinn",
       "textsuperscript",
+      "voxel",
       "youtube"
     ]
   }
