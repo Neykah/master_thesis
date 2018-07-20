@@ -1,7 +1,24 @@
 \chapter{System Architecture and Implementation}
 \label{chap:archi}
 
-Our main contribution in this paper is the creation of a brand action recognition algorithm. In this chapter, we will give a precise step-by-step description of our system.
+Our main contribution in this paper is the creation of a brand action recognition algorithm. In this chapter, we will first explain how the different modules of our methods interact together and afterward we will give a precise step-by-step description of our system.
+
+\section{Method Overview}
+The goal of our method is to detect action performed by humans based on data acquired from a robot equipped with a RGB-D camera by using the spatial context information given by human/object interactions. Our project workflow is in figure \ref{fig:workflow}.
+
+As a pre-training step, we send detected human poses from a big scale unlabeled video dataset as an input to an unsupervised clustering algorithm named SOINN, in order to obtain body pose clustering model that will be refined later using human/object interaction information.
+
+In real-time, we then detect the body pose from the RGB image. In the meantime, we also create a map of the environment using both the RGB and depth images, and we perform object segmentation on it. We then reconstruct the 3D human pose in this map from the 2D pose and the camera parameters, and record the physical interaction between each detected human and each detected object.
+
+We then create a new SOINN model based on both the pre-trained nodes and the new [pose, interaction] signals. This new models differentiate actions more precisely than the naive pose estimation model, as we will show in chapter \ref{chap:experiments}.
+
+\begin{figure}[htp]
+\centering
+\includegraphics[width=125mm, keepaspectratio]{images/workflow.png}
+\caption{General workflow of our method}
+\label{fig:workflow}
+\end{figure}
+
 \section{Hardware and Framework}
 In this section, we will describe the hardware from which we obtained our data and the software elements that support our work.
 \subsection{ROS Architecture}
@@ -74,19 +91,22 @@ However, we considered that an online algorithm would be better for our applicat
 \begin{figure}[h]
     \centering
     \includegraphics[width=150mm, keepaspectratio]{images/SOINN_cat.png}
-    \caption{SOINN algorithm applied to noisy artificial data. For each step, random points from the original figure are selected along with pure noise points(left image). The algorithm assigns each new signal to a cluster, called node and reconfigure its architecture by recomputing its nodes values and the relationship between them (right image).}
+    \caption[SOINN algorithm applied to noisy artificial data]{SOINN algorithm applied to noisy artificial data. For each step, random points from the original figure are selected along with pure noise points(left image). The algorithm assigns each new signal to a cluster, called node and reconfigure its architecture by recomputing its nodes values and the relationship between them (right image).}
     \label{fig:SOINN_cat}
 \end{figure}
 
 SOINN takes as input vectors of any dimensions - the only restriction is that these dimensions should remain consistent over time - and based on the distance between this new signal and the existing nodes either assigns the signal to an existing node or creates a new one. It then reconfigure its architecture and may decide to destroy nodes not used anymore or to fuse two nodes near to each others.
-An example of clustering on artificial data is shown in figure \ref{fig:SOINN_cat}. A complete description of the algorithm can be found in pages 49 to 55 in \cite{SOINN}. In this research, we used the implementation from \cite{soinn_implementation} for pose clustering, and we modified it to make it an ROS node able to modify the volume of its input in order to perform pose/interaction clustering as described in section \ref{section:pose-interaction_clustering}.
+An example of clustering on artificial data is shown in figure \ref{fig:SOINN_cat}. A complete description of the algorithm can be found in pages 49 to 55 in \cite{SOINN}, and a brief summary of the algorithm parts of interest for this study is given in Appendix \ref{chap:soinn_original_algo}. In this research, we used the implementation from \cite{soinn_implementation} for pose clustering, and we modified it to make it an ROS node able to modify the volume of its input in order to perform pose/interaction clustering as described in section \ref{section:pose-interaction_clustering}.
 
 For our particular application, we use SOINN twice in our workflow. The first time is during the pre-training step, where we make SOINN learn to cluster 2D body poses that OpenPose generated from a dataset described in chapter \ref{chap:experiments}, which generate what we call a naive pose estimation. This first estimation will be useful as a foundation for our proposed model: indeed since images/video datasets are easy to find and OpenPose can quickly generate body pose estimations based on them, the training data is abundant. Later on, when the robot is operated in real-time, we will transfer the knowledge it gained on 2D body pose estimation to create another modified SOINN model from this original model using to include the human/object interaction along with the pose estimation. This particular step will be described in details in section \ref{section:pose-interaction_clustering}.
 
-\subsection{Pre-training - to be completed}
-In this section, we will explain the pre-processing ...
+\subsection{Pre-processing}
+In this section, we explain the pre-processing steps we take before feeding the SOINN algorithm with human pose estimation data.
 
-For our application, we decided to discard the joints number 14 to 17 corresponding to the right/left eye and ears respectively. These joints did not affect the clustering result and were often either not detected at all or with a bad confidence score, which is problematic for the preprocessing part of our pose clustering algorithm.
+For our application, we decided to discard the joints number 14 to 17 corresponding to the right/left eye and ears respectively. These joints did not affect the clustering result and were often either not detected at all or with a bad confidence score, which is problematic for the pre-training of our algorithms.
+
+In order to prevent inputting poorly detected body poses to SOINN, we impose a quality threshold T on the pose estimation result. First, we check if the torso detection is good enough by discarding body pose with confidence result inferior to a threshold on body joints 0, 1, 2, 5, 8 and 11 corresponding to the nose, neck, right and left shoulders and right and left hips respectively. We then ask for the average confidence score over all the body joints to be superior to that threshold.
+Then, we need to normalize our detected poses. To that end, we place the origin at the position of the neck, and we linearly transform the x, y coordinates to [-1, 1].
 
 \section{Spatial Context Acquisition}
 In this section, we will describe the different tools we used to make the robot able to perform environment mapping and object segmentation on this map.
@@ -106,7 +126,7 @@ In the original work, the algorithm only used Kinect data to reconstruct visual 
 \label{section:object_seg}
 In this section, we will explain how we perform 3D object segmentation using the environment map generated in the previous section as input. We developed entirely the programs in this section by using the C++ Point Cloud Library (PCL) \cite{PCL}.
 
-Object segmentation is one of the major problems in computer vision, and performing it in 2D in an unsupervised way is still unattainable. Hopefully, this problem is far more easier in 3D, where data is sparse and simple algorithms can attain quite good results. Moreover, the problem of detecting human/object interaction is also really difficult in 3D while being trivial in 2D. This is the main motivation for performing this part of the workflow in 3D even if our clustering algorithm was previously trained on 2D examples.
+Object segmentation is a major problem in computer vision, and performing it in 2D in an unsupervised way is still unattainable. Hopefully, this problem is far more easier in 3D, where data is sparse and simple algorithms can attain quite good results. Moreover, the problem of detecting human/object interaction is also really difficult in 3D while being trivial in 2D. This is the main motivation for performing this part of the workflow in 3D even if our clustering algorithm was previously trained on 2D examples.
 
 The first problem that arise when trying to deal with our map is that it is far too heavy to carry real-time operations - the raw map is about 40M 3D colored points. We therefore begin by reducing that number by applying the following operations: 
 
@@ -129,7 +149,7 @@ In order to detect the human/object interaction, we do not only need the object 
 
 To that end, we developed a ROS node that subscribes to both the 2D ($x_{pixel}, y_{pixel}$) body skeleton published by the ROS OpenPose node in the image coordinate and the 3D point cloud. It then computes the real world coordinates ($x_{world}, y_{world}, z_{world}$) coordinates of each body part based on the average real-world coordinates of its neighbouring points on the image. A precise description of the algorithm can be found as algorithm \ref{alg:openpose3d}.
 
-\begin{algorithm}[h]
+\begin{algorithm}[htp]
     \KwData{(synchronized)\\2D image coordinates of a body joint: ($x_{pixel}, y_{pixel}$) \\ point cloud environment: cloud}
     \KwResult{3D real-world coordinates of that body joint: ($x_{world}, y_{world}, z_{world}$)}
     get synchronized input \\
@@ -146,6 +166,7 @@ To that end, we developed a ROS node that subscribes to both the 2D ($x_{pixel},
     $x_{world} \leftarrow average(possible_x)$ \\
     $y_{world} \leftarrow average(possible_y)$ \\
     $z_{world} \leftarrow average(possible_z)$}
+    RETURN ($x_{world}, y_{world}, z_world$)
     \caption{3D Human Pose reconstruction for one body joint}
     \label{alg:openpose3d}
 \end{algorithm}
@@ -158,13 +179,79 @@ In this work, our detection method is pretty straightforward. We simply define a
 
 \subsection{Pose-Interaction Clustering}
 \label{section:pose-interaction_clustering}
-There are many ways to include the human/object interaction as an additional information to differentiate clusters issued by SOINN. We finally decided to integrate it as a new dimension for both existing and future SOINN nodes. By doing that, we take advantage of the SOINN algorithm to adapt itself to new data without having to change drastically core functions which would have lead to a completely new algorithm in the end, instead of refining the existing one.
-
-The main idea is to create a new SOINN model from our existing one. The nodes of this model have one more dimension than previously: added to the 28 first coordinates that represent the 2D pose coordinates for one person, we add the object id associated with this pose. Since this id ranges from 0 to the number of detected object -- 1, we initialize the last coordinate of our previous nodes to --1. 
-
-A new signal is given to the algorithm as input each time that a new interaction is detected, and therefore contains both the body pose and human/object interaction informations. From there, another problem that arise is that it is no longer possible to compute the distance between new signals and existing nodes as we did before. Indeed, classical SOINN algorithm uses euclidean distance but our last coordinate is of course incompatible with that distance. 
-
-We propose to compute the distance between our new vectors as the previous euclidean distance between them from which we add a penalty if the two objects are associated with different objects or subtract a constant as a bonus if they are associated with the same object. If one of the two compared signal is not associated with an object yet, ie its last coordinate is --1, we just compute the euclidean distance like before.
+Before reading this section, the reader may find comfortable to get familiarized with the SOINN algorithm. To that end, we wrote a summary of the parts of interest in Appendix \ref{chap:soinn_original_algo}.
 
 
-TO COMPLETE
+There are many ways to include the human/object interaction as an additional information to differentiate clusters issued by SOINN. We finally decided to integrate it as a new dimension for both existing and future SOINN nodes. By doing that, we take advantage of the SOINN algorithm to adapt itself to new data without having to drastically change core functions. Our solution involves changing three parts of the original SOINN to tackle these problems:
+
+\begin{enumerate}
+    \item{How different are the nodes in our new model ?}
+    \item{How to convert original SOINN model to our new one ?}
+    \item{How does a new signal alter the model ?}
+\end{enumerate}
+
+The main idea is to create a new SOINN model from our existing one. The nodes of this model have one more dimension than previously: added to the 28 first coordinates that represent the 2D pose coordinates for one person, we add the object id associated with this pose. Since this id ranges from 0 to the number of detected object -- 1, we initialize the last coordinate of our previous nodes to --1, as shown in Algorithm \ref{algo:new_nodes}.
+
+\begin{algorithm}[H]
+    \label{algo:new_nodes}
+    \KwData{Node Set: A, number of nodes: $N_A$, previous signal dimension: n}
+    \KwResult{SOINN-Interaction node set B}
+    \ForEach{node $c \in A$}{
+        create vector c' of size n + 1 \\
+        c'[0 : n--1] = c[:] \\
+        c'[n] = --1 \\
+        $B = B ~\cup$ c'}
+    \caption{Creation of a SOINN-Interaction model from a classical SOINN model}
+\end{algorithm}
+
+A new signal is given to the algorithm as input each time a new interaction is detected, and therefore contains both the body pose and human/object interaction informations. From there, another problem that arise is that it is no longer possible to compute the distance between new signals and existing nodes as we did before. Indeed, classical SOINN algorithm uses euclidean distance but our last coordinate is of course incompatible with that distance. 
+
+We propose to compute the distance between our new vectors as the previous euclidean distance between them from which we add a multiplicative penalty if the two objects are associated with different objects or a bonus if they are associated with the same object. If one of the two compared signal is not associated with an object yet, ie its last coordinate is --1, we just compute the euclidean distance like before. The new context distance we introduce is as follow:
+
+\begin{equation}
+    d_C(A, B) = K\cdot \sqrt{\sum_{k=0}^{n-2}(a_i-b_i)^2} 
+\end{equation}
+\[
+with~K =
+\begin{cases}
+    bonus &\quad if~a_{n-1}=b_{n-1},~~ 0 < bonus < 1 \\
+    1 &\quad if~a_{n-1}=-1~or~b_{n-1}=-1 \\
+    malus &\quad if~a_{n-1}\neq b_{n-1},~~ malus > 1 \\
+\end{cases} 
+\]
+\\
+SOINN is now able to calculate the distance between an input signal and existing nodes as well as the distance between two existing nodes but we still have some modifications to make. Indeed, it cannot handle the nodes as before when it needs to modify its nodes. For instance the operation:
+\begin{equation}
+    \Delta W_{s1} = \epsilon \cdot (\xi - W_{s1})
+\end{equation}
+described in Appendix \ref{chap:soinn_original_algo} does not make sense for the last coordinate since it represents an index and not a measurable dimension. Therefore when we add a new signal to an existing node, we have to tell SOINN what to do in case their last coordinate are not the same and tell him which one it should choose for the new cluster centroid. 
+
+We propose the following strategy: we define a confidence score for each node that represent how much its interaction coordinate is reliable. We implement these scores as part of a new attribute list in our SOINN class. The confidence score is initialized to 0 for nodes loaded from previously trained SOINN model, and its evolution when a new signal comes out is detailed in algorithm \ref{algo:confidence}. 
+
+The $\alpha$ parameter is new and defines a learning rate for the confidence score. Its purpose is to help the model build confidence in its node results in the beginning, when only a few of them are annotated with the human/object interaction information. Reinforcing the network for nodes with strong connections helps to stabilize a few nodes that act as a solid base for the next signals.
+
+\begin{algorithm}[htp]
+    \KwData{
+    \begin{itemize}
+        \item{Input signal $\xi$ of size n}
+        \item{SOINN/interaction node c with weights $W_i$}
+        \item{Confidence score of node c: $conf$}
+        \item{Number of neighbours of node c: $N_{adj}$}
+    \end{itemize}
+    \KwResult{New node c' with weights $W_i'$ and confidence score $conf'$}
+    \ForEach{i in \{0, 1, .., n - 2\}}{$W_i'=W_i + \epsilon(\xi_i - W_i)$}
+    \uIf{$conf\leq0$}{$W_{n-1}'=\xi_{n-1}$ \\ $conf'=1$}
+    \uElseIf{$conf > 0~and~W_{n-1} \neq \xi_{n-1}$}{
+        $conf'=conf-1$ \\
+        \uIf{$conf'\leq0$}{$W_{n-1}'=-1$}
+        \uElse{$W_{n-1}'=W_{n-1}$}}
+    \ElseIf{$W_{n-1}=\xi_{n-1}$}{
+        $W_{n-1}'=W_{n-1}$ \\
+        $conf'=conf+\alpha \cdot N_{adj}$
+    }}
+    \textbf{return $W_i', ~conf'$}
+    \caption{Fusion of a new human/interaction signal in an existing node. $\epsilon$ is the same parameter as in the original SOINN model, and $\alpha$ is introduced in this version.}
+    \label{algo:confidence}
+\end{algorithm}
+
+These changes introduce three new parameters to our model: the bonus and malus parameters from our new distance function and the $\alpha$ parameter in Algorithm \ref{algo:confidence} that defines a kind of learning rate for the confidence score. We will explain in chapter \ref{chap:experiments} how we tuned these parameters to obtain better clustering results.

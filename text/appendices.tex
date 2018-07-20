@@ -1,4 +1,42 @@
 \appendix
 \chapter{SOINN algorithm}
+\label{chap:soinn_original_algo}
+In this appendix, we are going to describe a high-level version of the SOINN algorithm. We are not going to detail everything, but only the parts that the reader need to be comfortable about since our proposed algorithm will modify them afterward. A complete version of the SOINN algorithm can be found in \cite{SOINN}, pages 43 to 60.
 
+\begin{algorithm}[H]
+    \KwData{
+        \begin{itemize}
+            \item{Signals dimension: n}
+            \item{Node set: A, number of nodes: $N_A$}
+            \item{Connection set: C}
+            \item{Winning times of node i: $M_i$ initialised at 0}
+            \item{Weight vector of node i: $W_i \in \mathbb{R}^n$}
+            \item{First/second similarity threshold: $T_1, T_2$}
+            \item{Number of signals: $N_S$, initialised at 0}
+            \item{Parameter $\lambda$}
+        \end{itemize}
+    }
+    Get input signal $\xi \in \mathbb{R}^n$, $N_S = N_S + 1$ \\
+    \If{$N_A<2$}{C = $C \cup \xi$ \\ \textbf{return}}
+    Search for winner $s_1$ and second winner $s_2$ among A based on Euclidean distance: \\
+    $s_1 = \underset{c ~\in ~A}{\arg\min}~||\xi - W_{c}||, ~d_1 = ||\xi - W_{s1}||$ \\
+    $s_2 = \underset{c ~\in ~A\backslash\{s_1\}}{\arg\min}~||\xi - W_{c}||, ~d_2 = ||\xi - W_{s2}||$ \\
+    \If{not learning}{\textbf{return} $s_1$}
+    Calculate similarity thresholds $T_1$, $T_2$ from distance between $s_1,s_2$ and their farthest connection in C
+\end{algorithm}
 
+\begin{algorithm}[H]
+    \eIf{$d_1>T_1$ and $d_2>T_2$}{$A = A \cup \xi$}
+    {Add one winning time to $s_1$: $M_{s1} = M_{s1} + 1$ \\
+    Draw edge between $s_1$ and $s_2$ in C: $C = C \cup (s_1,s_2)$ \\
+    Update winner weights and its neighbours ones in C: \\
+    $\Delta W_{s1} = \epsilon_1 \cdot (W_{s1} - \xi)$ \\
+    $\Delta W_k = \epsilon_2 \cdot (W_k - \xi)$, with $\epsilon_1, \epsilon_2$ as two learning rates \\
+    Update local error for $s_1$: $E_{s1} = E_{s1} + d_1$ \\
+    Update C based on the distance between new nodes \\
+    \If{$N_S$ is a multiple of $\lambda$}{
+        Try to add new node between node i with higher local error and node j with higher local error among neighbours of node i\\
+        Delete noisy node which have only 1 neighbour and won just once}
+    }
+    \caption{SOINN algorithm overview}
+\end{algorithm}
