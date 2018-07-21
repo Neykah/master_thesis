@@ -14,7 +14,7 @@ We then create a new SOINN model based on both the pre-trained nodes and the new
 
 \begin{figure}[htp]
 \centering
-\includegraphics[width=125mm, keepaspectratio]{images/workflow.png}
+\includegraphics[width=120mm, keepaspectratio]{images/workflow.png}
 \caption{General workflow of our method}
 \label{fig:workflow}
 \end{figure}
@@ -147,7 +147,14 @@ An ideal approach would be to average the result of several segmentation algorit
 \subsection{3D Pose Estimation}
 In order to detect the human/object interaction, we do not only need the object position information, but also the position of the human pose estimate in the same coordinate system. OpenPose only provides the pixel locations of body joints position on a 2D image, so we need to transform that output by estimating the real-world coordinates of each point.
 
-To that end, we developed a ROS node that subscribes to both the 2D ($x_{pixel}, y_{pixel}$) body skeleton published by the ROS OpenPose node in the image coordinate and the 3D point cloud. It then computes the real world coordinates ($x_{world}, y_{world}, z_{world}$) coordinates of each body part based on the average real-world coordinates of its neighbouring points on the image. A precise description of the algorithm can be found as algorithm \ref{alg:openpose3d}.
+To that end, we developed a ROS node that subscribes to both the 2D ($x_{pixel}, y_{pixel}$) body skeleton published by the ROS OpenPose node in the image coordinate and the 3D point cloud. It then computes the real world coordinates ($x_{world}, y_{world}, z_{world}$) coordinates of each body part based on the average real-world coordinates of its neighbouring points on the image. A precise description of the algorithm can be found in algorithm \ref{alg:openpose3d} and an output example is shown in figure \ref{fig:openpose3d}.
+
+\begin{figure}[htp]
+\centering
+\includegraphics[width=100mm, keepaspectratio]{images/openpose3d.png}
+\caption{Computation of a 3D pose estimation from 2D one and point cloud.}
+\label{fig:openpose3d}
+\end{figure}
 
 \begin{algorithm}[htp]
     \KwData{(synchronized)\\2D image coordinates of a body joint: ($x_{pixel}, y_{pixel}$) \\ point cloud environment: cloud}

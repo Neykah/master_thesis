@@ -1,7 +1,29 @@
 \chapter{Future Work and Conclusion}
 \label{chap:conclusion}
-\section{Future Work}
-Principium autem unde latius se funditabat, emersit ex negotio tali. Chilo ex vicario et coniux eius Maxima nomine, questi apud Olybrium ea tempestate urbi praefectum, vitamque suam venenis petitam adseverantes inpetrarunt ut hi, quos suspectati sunt, ilico rapti conpingerentur in vincula, organarius Sericus et Asbolius palaestrita et aruspex Campensis.
+\section{Limitations and Discussion for Future Work}
+In this section, we discuss some of the results described earlier and introduce potential lines of approach for future works.
 
+\subsection{Computational cost}
+The main drawback of the technique introduced in this work is its inherent computational load. This limitation reveals itself in three points of the workflow. The first one is the transit of point cloud data over the ROS network. Point cloud data is extremely heavy in general, and the laptop mounted on the Turtlebot has difficulties to send them at a rate sufficient for real-time applications. This could be improved either by only sending the raw color and depth images across the network and letting the desktop PC compute the 3D reconstruction, or by using a GPU device on the robot side. Another inconvenience is that this intensive use of the laptop PC resources quickly empties the robot batteries. 
+
+Another limitation is in the processing time of OpenPose. This algorithm is extremely heavy and the desktop PC needs a strong GPU to make it run with barely enough fps for real-time applications: according to the currently released benchmark\footnote{https://bit.ly/2NvQli0} a single GPU configuration cannot currently achieve more than about 11 fps.
+
+Finally, the point cloud processing part is also quite heavy, which resulted in our desktop PC being barely able to carry any task in parallel of our implementation. This can also be partly solved in upgrading our GPU configuration, but it may prove worthy to also check upon alternatives to the PCL library.
+
+\subsection{Object segmentation}
+Another limitation of our current algorithm is the way we segment objects in environment. Our approach is quite simple in that regard, and we may find better solutions that euclidean cluster extraction in the future, either by replacing it by another technique or by combining its results with the ones obtained with another process. 
+
+As suggested before, it may be interesting to build an hybrid clustering method based on both euclidean clustering and region growing segmentation for instance, but this was too computationally heavy to integrate this in the current version of our implementation. Another approach to refine the clustered objects would be to dynamically adjust euclidean clustering parameters - maybe by making the computer learn them or by making them scale with the size of the point cloud for instance - to improve the system robustness to more diverse environments.
+
+Another limitation related to object segmentation is that our current algorithm is unable to determine if two different objects are from the same category, which is problematic in our current representation. A workaround would be to include a real object clustering instead of simple object segmentation. However, such supplementary step would make the system more computationally heavy, which is not something we can afford for now.
+
+\subsection{Pre-training Dataset}
+We may also question the current version of the pre-training phase. The interesting part about it is that it makes the robot learn about many various base poses far faster than what it would learn in real-time, and the data is very diverse. However, we are precisely a bit troubled by the huge diversity of the Hollywood in Homes dataset. It may be more relevant to pre-train the robot on more typical first-person robotics images. The transfer learning from pre-trained poses to actual actions would be less difficult then. However, we will mitigate this judgement by stating that the pre-training data is only meaningful for the first hours of the robot activity. On a long-term use closer to the typical application that could be done of this method, this problem will tend to correct itself with time.
+
+\pagebreak
 \section{Conclusion}
-Utque proeliorum periti rectores primo catervas densas opponunt et fortes, deinde leves armaturas, post iaculatores ultimasque subsidiales acies, si fors adegerit, iuvaturas, ita praepositis urbanae familiae suspensae digerentibus sollicite, quos insignes faciunt virgae dexteris aptatae velut tessera data castrensi iuxta vehiculi frontem omne textrinum incedit: huic atratum coquinae iungitur ministerium, dein totum promiscue servitium cum otiosis plebeiis de vicinitate coniunctis: postrema multitudo spadonum a senibus in pueros desinens, obluridi distortaque lineamentorum conpage deformes, ut quaqua incesserit quisquam cernens mutilorum hominum agmina detestetur memoriam Samiramidis reginae illius veteris, quae teneros mares castravit omnium prima velut vim iniectans naturae, eandemque ab instituto cursu retorquens, quae inter ipsa oriundi crepundia per primigenios seminis fontes tacita quodam modo lege vias propagandae posteritatis ostendit
+In this work, we introduced a novel way of clustering actions performed by humans based on their body pose estimation by refining an existing algorithm by bringing spatial context information to the model. We also developed a proof of work implementation compatible with a typical domestic robot application. 
+
+Our model achieves promising results by being more accurate than naive body pose clustering and suggest that making use of spatial consistency for action recognition may prove itself valuable in the future. It also differentiate from other works in its ability to only generalize up to a certain extent that depends on the robot environment. That ability is especially useful for domestic robots applications, where each robot has to learn specific details that are only related to its own environment.
+
+However, the current implementation is quite slow for real-time applications and suffers from the same limitations as the models it is built on top of. Therefore, it may not be applicable easily in the near future, but could become more useful once human body pose estimation and point cloud processing are processed quicker.
