@@ -1,6 +1,6 @@
 \chapter{Introduction}
 
-In this work, we try to perform unsupervised action recognition based on spatial context information in a domestic robot environment. In this section, we will describe the exact task and its context, before defining the objectives of this study and introducing our contribution.
+In this work, we try to perform unsupervised action recognition based on spatial context information in a domestic robot environment. In this section, we will precisely describe the task, its context and a few previous works, before defining the objectives of this study and introducing our contribution.
 
 \section{Background and Related Works}
 \subsection{Action Recognition}
@@ -26,9 +26,9 @@ Indeed, they should be able to evolve in the small and somewhat chaotic environm
 A lot of work has already been done in order to make robots transition from facilities to private housings. Some of then focus on finding a good 3D representation of complex environments and operate "basic" analysis to detect navigable paths in these representations \cite{SLAM_review,loop-closure}. Other works attempt to break these maps into smaller meaningful parts by performing recognition and segmentation in quite different ways that what is done on images data \cite{plan_recognition,region_growing_seg, pointcloud_clustering}. Finally, others try to extract semantic meaning from these parts using various criteria \cite{action_map_first_person, semantic_pointcloud}.
 
 \section{Objectives}
-The goal of this work is primarily to implement action recognition on a domestic robot. Considering the chaotic and diverse environment in which that domestic robot evolves, and since there is currently no labeled dataset of videos containing action diverse enough to be realistically used to detect domestic actions, we decided in the beginning to use unsupervised clustering applied to the output of a body part detection algorithm to tackle this task. The output of this workflow is a set of static human pose clusters. 
+The goal of this work is primarily to implement action recognition on a domestic robot. Considering the chaotic and diverse environment in which that domestic robot evolves, and since there is currently no labeled dataset of videos containing action diverse enough to be realistically used to detect domestic actions, we decided since the first stages of the project to use unsupervised clustering applied to the output of a body part detection algorithm to tackle this task. The output of this workflow is a set of static human pose clusters. 
 
-From there, the main trend in the literature is to make use of the temporal consistency of the videos to refine the action clustering \cite{unsup_time_seq_action_recognition, action_matching}. However, since we work with a robot we have access to a lot more of spatial context data, like depth and odometry. Therefore, we decided to focus on the use of these spatial features to improve the action clustering.
+From this point, the main trend in the literature is to make use of the temporal consistency of the videos to refine the action clustering \cite{unsup_time_seq_action_recognition, action_matching}. However since we work with a robot, we have access to a lot more of spatial context data, like depth and odometry. Therefore, we decided to focus on the use of these spatial features to attempt to detect human/robot interactions and make use of this additional information to improve the action clustering.
 
 \section{Contributions}
 The main contribution of this work is the development of a complete robotics platform for action recognition using spatial context. By using it, one can simultaneously perform the tasks of robot control, point cloud generation, environment mapping and navigation, registration of the history of human/environment interactions - what we call an \emph{action map} - and finally action recognition.

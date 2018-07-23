@@ -1,14 +1,14 @@
 \chapter{System Architecture and Implementation}
 \label{chap:archi}
 
-Our main contribution in this paper is the creation of a brand action recognition algorithm. In this chapter, we will first explain how the different modules of our methods interact together and afterward we will give a precise step-by-step description of our system.
+Our main contribution in this paper is the creation of an innovative action recognition algorithm. In this chapter, we will first explain how the different modules of our platform interact together and afterward we will give a precise step-by-step description of our system.
 
 \section{Method Overview}
-The goal of our method is to detect action performed by humans based on data acquired from a robot equipped with a RGB-D camera by using the spatial context information given by human/object interactions. Our project workflow is in figure \ref{fig:workflow}.
+The goal of our method is to detect action performed by humans based on data acquired from a robot equipped with a RGB-D camera by using the spatial context information given by human/object interactions. Our complete project workflow can be found in figure \ref{fig:workflow}.
 
-As a pre-training step, we send detected human poses from a big scale unlabeled video dataset as an input to an unsupervised clustering algorithm named SOINN, in order to obtain body pose clustering model that will be refined later using human/object interaction information.
+As a pre-training step, we send detected human poses from a big scale unlabeled video dataset as input to an unsupervised clustering algorithm named SOINN, and we obtain a body pose clustering model that will be refined later using human/object interaction information.
 
-In real-time, we then detect the body pose from the RGB image. In the meantime, we also create a map of the environment using both the RGB and depth images, and we perform object segmentation on it. We then reconstruct the 3D human pose in this map from the 2D pose and the camera parameters, and record the physical interaction between each detected human and each detected object.
+In real-time, we then detect the body pose from the RGB image. In the meantime, we also create a map of the environment using both the RGB and depth images, and perform object segmentation on it. We then reconstruct the 3D human pose in this map by making use of both 2D pose and camera parameters, and record the physical interaction between each detected human and each detected object.
 
 We then create a new SOINN model based on both the pre-trained nodes and the new [pose, interaction] signals. This new models differentiate actions more precisely than the naive pose estimation model, as we will show in chapter \ref{chap:experiments}.
 
@@ -26,11 +26,18 @@ Our algorithm is supposed to be applied on any domestic robot, and can become pa
 
 ROS \cite{ROS} - for Robot Operating System - is not really a proper OS but rather a middleware that run on most Linux distributions whose primary task is to provide a robust support for large volumes of data that need to be processed in real time. It also makes it possible to paralellize a lot of programs even if some of the hardware does not have high performance CPU or GPU.
 
-The basic principle of ROS is that it makes all the different programs work as nodes in a network. The most powerful computer of the network - in our case a desktop PC - hosts the ROS Core node and acts as a server: it is responsible for managing the exchange of data among all the other nodes. Each ROS node can do three basic actions: it can publish its output at a specified rate as ROS topics, which are then advertised by the Core node. It can also subscribe to topics published by other nodes, and can therefore use this data as real-time input for its own computations. Finally, it can propose ROS services to other nodes, which means that other nodes can exceptionally ask it for a specific data that is not published. 
+The basic principle of ROS is that it makes all the different programs work as nodes in a network. The most powerful computer of the network - in our case a desktop PC - hosts the ROS Core node and acts as a server: it is responsible for managing the exchange of data among all the other nodes. Each ROS node can do three basic actions: it can publish its output at a specified rate as ROS topics, which are then advertised by the Core node. It can also subscribe to topics published by other nodes, and can therefore use this data as real-time input for its own computations. Finally, it can propose ROS services to other nodes, which means that other nodes can exceptionally ask it for a specific data that is not published. A summary scheme is given in figure \ref{fig:ros_structure}.
 
-The code for each node can be written in either C++ 11 or Python 2.7, and ROS can therefore also be useful to link the advantages of these two languages in one software. On this project, the computationally expensive code is written in C++ for its rapidity and the code for managing the data and transforming it is written in Python to make use of Numpy and other useful modules.
+\begin{figure}[tp]
+\center
+\includegraphics[width=120mm, keepaspectratio]{images/ros_structure.png}
+\caption{Typical structure of a ROS network.}
+\label{fig:ros_structure}
+\end{figure}
 
-The ROS architecture is really robust for robotics since the computer that hosts the Core node can take care of the heavy computation tasks while the limited robot computer only has to send data to the network and get back the responses. Another big advantage of ROS is that it is extremely modulative: the hardware may change completely or you may add another or even ten robots to the system and all you have to do is to make sure that every node publishes and subscribes to the good topics. For all of these reasons, we chose ROS so that our software can be effective in many different environments with only little adaptation.
+The code for each node can be written in either C++ 11 or Python 2.7, and ROS can therefore also be useful to link the advantages of these two languages in one software. On this project, the computationally expensive code is written in C++ for its efficiency and the code that manages  data and transforms it is written in Python to make use of Numpy and other useful modules.
+
+The ROS architecture is really robust for robotics since the computer that hosts the Core node can take care of the heavy computation tasks while the limited robot computer only has to send data to the network and get back the responses. Another big advantage of ROS is that it is extremely modulative: the hardware may change completely or we may add another or even ten robots to the system and all we have to do is to make sure that every node publishes and subscribes to the good topics. For all of these reasons, we chose ROS so that our software can be effective in many different environments with only little adaptation.
 
 \subsection{Turtlebot}
 The robot we used for our research is a Turtlebot2\footnote{https://www.turtlebot.com/turtlebot2/}. Turtlebot\textsuperscript{TM} is an easily programmable robot which consists in a Kobuki\footnote{http://kobuki.yujinrobot.com/about2/} base on top of which is mounted a Microsoft Kinect\textsuperscript{TM} sensor. 
@@ -40,7 +47,7 @@ The Kobuki\textsuperscript{TM} base contains four wheels including two motorised
 The Kinect\textsuperscript{TM} sensor is the combination of a RGB camera and a IR sensor. The first version of the Kinect sensor also provides a Windows\textsuperscript{TM} development environment, but this is incompatible for ROS, which only runs on Linux. Because of that, we decided to use the second version instead: Kinect for XBox One\textsuperscript{TM}, since this version provides more accurate results\cite{kinect_comparison}. However, since there is no official driver release for this sensor, we instead use an open source one named Freenect2\cite{libfreenect2}, which provides us both RGB and IR images, but no depth registration. Further explanation about the depth registration process and point cloud publication will be given later on this chapter.
 
 We then use a program called kinect2 bridge\cite{iai_kinect2} to reconstruct the point cloud from the RGB and IR images. This is done by performing depth to color frame registration using extrinsic parameters of the Kinect cameras\footnote{\raggedright A description of the algorithm used can be found here: http://nicolas.burrus.name/index.php/Research/KinectCalibration}.
-It then publishes 
+It then publishes the reconstructed point cloud as ROS topics. Three resolutions are available: SD (512x424), QHD (960x540) and HD(1920x1080). We chose to use the QHD resolution since it offers the best balance between precision and computing time and object segmentation was difficult to process in SD.
 
 \section{Unsupervised Pose Clustering}
 In this section we describe how we obtain the pose estimation and create a cluster model from them.
@@ -54,7 +61,7 @@ On the other hand, using 2D input is less computationally costly, and there are 
 
 \begin{table}[h]
     \centering
-    \caption{Comparison of features between 2D and 3D environment}
+    \caption{Feature comparison between 2D and 3D environment}
     \label{tab:dimension_comparison}
     \begin{tabular}{|l|l|}
         \hline
@@ -64,14 +71,14 @@ On the other hand, using 2D input is less computationally costly, and there are 
         + Same algorithm for both human & -- Separate algorithms for the two tasks \\ detection and pose estimation & \\
         -- One dimension is not used & + Robot environment is in 3D \\
         -- Unsupervised object clustering: tricky & \textbf{+ Unsupervised object clustering} \\
-        & \textbf{~~is easier (sparsity)}
+        & \textbf{~~is easier (sparsity of the data)}
         \\ \hline
     \end{tabular}
 \end{table}
 
 \subsection{2D Human Pose Estimation}
 \label{section:openpose}
-Human pose estimation is performed by using a trained deep learning model named OpenPose \cite{Openpose}. It takes image input and processes the body joint position for each individual present on the scene by computing part affinity field (PAF) fields. OpenPose performs quick enough for real-time applications: about 10 frames per second on our desktop PC. The outputs for each frame consists in the list of humans detected, where each human is represented as the list of his 18 body joints position as shown in fig \ref{fig:2D_joints_vis}. Each point consist in x and y coordinates of the joint on the image and a score confidence which represent the confidence the algorithm puts into this result. This confidence score will prove itself useful in the next steps of our algorithm.
+Human pose estimation is performed by using a trained deep learning model named OpenPose \cite{Openpose}. It takes RGB images as input and processes body joints positions for each individual present on the scene by computing part affinity field (PAF). OpenPose performs quick enough for real-time applications: about 10 frames per second on our desktop PC. The outputs for each frame consists in the list of humans detected, where each human is represented as the list of his 18 body joints position like shown in fig \ref{fig:2D_joints_vis}. Each point consist in x and y coordinates of the joint on the image and a score confidence which represent the confidence the algorithm puts into this result. This confidence score will prove itself useful in the next steps of our algorithm to filter out bad recognition outputs.
 
 In order to generate body poses to use them as input data for the pre-training model described in section \ref{section:SOINN}, we use the publicly released OpenPose demo with previously selected images from our pre-training dataset. For the real-time learning this solution is longer viable because of its computational cost, and we developed our own ROS node based on the OpenPose API that subscribes to the RGB image published by the kinect2 bridge node and publishes the OpenPose output in return. This solution runs at around 10 FPS.
 
@@ -84,21 +91,22 @@ In order to generate body poses to use them as input data for the pre-training m
 
 \subsection{Unsupervised Clustering}
 \label{section:SOINN}
-Most of unsupervised learning algorithms can be applied to pose estimation. In theory we could use as input anything, and we particularly considered using methods such as the classical and very simple K-means \cite{k_means} to more complete models such as self-organizing map \cite{self_organizing_map} or neural gas clustering \cite{neural_gas}.
+Most of unsupervised learning algorithms can be applied to pose estimation clustering. In theory we could use any clustering technique, and we surveyed the methods we should use, from the very classical and simple K-means \cite{k_means} to more complete models such as self-organizing map \cite{self_organizing_map} or neural gas clustering \cite{neural_gas}.
 
-However, we considered that an online algorithm would be better for our application, since it is more in accordance to a domestic robot environment: the robot should never stop learning to adapt itself constantly to the changes to the changes in its environment. Even with that constraint, a lot of different methods exist \cite{online_clustering_algo}, but in the end we decided to use the Self Organizing Incremental Network (SOINN) \cite{SOINN} to deal with our task. We chose this algorithm mostly because it is lightweight, operates in real-time and tackles efficiently the Stability-Plasticity Dilemma \cite{stability-plasticity_dilemma}. 
+However, we considered that an online algorithm would be better for our application, since it is more in accordance to a domestic robot environment: the robot should never stop learning and adapt itself constantly to the changes in its environment. Even with that constraint, a lot of different methods exist \cite{online_clustering_algo}, but in the end we decided to use the Self Organizing Incremental Network (SOINN) \cite{SOINN} to deal with our task. We chose this algorithm mostly because it is lightweight, operates in real-time and tackles efficiently the Stability-Plasticity Dilemma \cite{stability-plasticity_dilemma}. 
 
-\begin{figure}[h]
+\begin{figure}[htp]
     \centering
     \includegraphics[width=150mm, keepaspectratio]{images/SOINN_cat.png}
     \caption[SOINN algorithm applied to noisy artificial data]{SOINN algorithm applied to noisy artificial data. For each step, random points from the original figure are selected along with pure noise points(left image). The algorithm assigns each new signal to a cluster, called node and reconfigure its architecture by recomputing its nodes values and the relationship between them (right image).}
     \label{fig:SOINN_cat}
 \end{figure}
 
-SOINN takes as input vectors of any dimensions - the only restriction is that these dimensions should remain consistent over time - and based on the distance between this new signal and the existing nodes either assigns the signal to an existing node or creates a new one. It then reconfigure its architecture and may decide to destroy nodes not used anymore or to fuse two nodes near to each others.
-An example of clustering on artificial data is shown in figure \ref{fig:SOINN_cat}. A complete description of the algorithm can be found in pages 49 to 55 in \cite{SOINN}, and a brief summary of the algorithm parts of interest for this study is given in Appendix \ref{chap:soinn_original_algo}. In this research, we used the implementation from \cite{soinn_implementation} for pose clustering, and we modified it to make it an ROS node able to modify the volume of its input in order to perform pose/interaction clustering as described in section \ref{section:pose-interaction_clustering}.
+SOINN takes as input vectors of any dimensions - the only restriction is that this choice of dimension should remain consistent over time - and either assigns the signal to an existing node or creates a new one, based on the distance between this new signal and the existing nodes . It then reconfigure its architecture and may decide to destroy nodes not used anymore or to fuse two nodes near to each others.
 
-For our particular application, we use SOINN twice in our workflow. The first time is during the pre-training step, where we make SOINN learn to cluster 2D body poses that OpenPose generated from a dataset described in chapter \ref{chap:experiments}, which generate what we call a naive pose estimation. This first estimation will be useful as a foundation for our proposed model: indeed since images/video datasets are easy to find and OpenPose can quickly generate body pose estimations based on them, the training data is abundant. Later on, when the robot is operated in real-time, we will transfer the knowledge it gained on 2D body pose estimation to create another modified SOINN model from this original model using to include the human/object interaction along with the pose estimation. This particular step will be described in details in section \ref{section:pose-interaction_clustering}.
+An example of clustering on artificial data is shown in figure \ref{fig:SOINN_cat}. A complete description of the algorithm can be found in pages 49 to 55 in \cite{SOINN}, and a brief summary of the algorithm parts that will interest us for this study is given in Appendix \ref{chap:soinn_original_algo}. In this research, we used the implementation from \cite{soinn_implementation} for pose clustering, and we modified it to make it an ROS node able to modify the volume of its input in order to perform pose/interaction clustering as described in section \ref{section:pose-interaction_clustering}.
+
+For our particular application, we use SOINN twice in our workflow. The first time is during the pre-training step, where we make SOINN learn to cluster 2D body poses that OpenPose generated from a dataset described in chapter \ref{chap:experiments}, which generate what we call a naive pose estimation. This first estimation will be useful as a foundation for our proposed model: indeed images/video datasets are easy to find and OpenPose can quickly generate body pose estimations based on them and thank to that, the training data is abundant. Later on, when the robot is operated in real-time, we will transfer the knowledge it gained on 2D body pose estimation to create another modified SOINN model from this base model to include the human/object interaction along with the pose estimation. This particular step will be described in details in section \ref{section:pose-interaction_clustering}.
 
 \subsection{Pre-processing}
 In this section, we explain the pre-processing steps we take before feeding the SOINN algorithm with human pose estimation data.
@@ -109,7 +117,7 @@ In order to prevent inputting poorly detected body poses to SOINN, we impose a q
 Then, we need to normalize our detected poses. To that end, we place the origin at the position of the neck, and we linearly transform the x, y coordinates to [-1, 1].
 
 \section{Spatial Context Acquisition}
-In this section, we will describe the different tools we used to make the robot able to perform environment mapping and object segmentation on this map.
+In this section, we describe the different tools we used to make the robot able to perform environment mapping and object segmentation on this map.
 
 \subsection{Simultaneous Localization and Mapping, Navigation}
 Making the robot aware of its environment is a difficult but well-studied problem. It can be divided into two distinct tasks, where the robot needs to answer two questions:
@@ -124,11 +132,11 @@ In the original work, the algorithm only used Kinect data to reconstruct visual 
 
 \subsection{3D Object Segmentation}
 \label{section:object_seg}
-In this section, we will explain how we perform 3D object segmentation using the environment map generated in the previous section as input. We developed entirely the programs in this section by using the C++ Point Cloud Library (PCL) \cite{PCL}.
+In this section, we explain how we perform 3D object segmentation using the environment map generated in the previous section as input. We developed the modules in this section from scratch using the C++ Point Cloud Library (PCL) \cite{PCL}.
 
-Object segmentation is a major problem in computer vision, and performing it in 2D in an unsupervised way is still unattainable. Hopefully, this problem is far more easier in 3D, where data is sparse and simple algorithms can attain quite good results. Moreover, the problem of detecting human/object interaction is also really difficult in 3D while being trivial in 2D. This is the main motivation for performing this part of the workflow in 3D even if our clustering algorithm was previously trained on 2D examples.
+Object segmentation is a major problem in computer vision, and performing it in 2D in an unsupervised way is still an open problem. Hopefully, this problem is easier to solve in 3D, where data is sparse and simple algorithms can attain reasonably good results. Moreover, the problem of detecting human/object interaction is also really difficult in 2D while being trivial in 3D. This is the main motivation for performing this part of the workflow in 3D even if our clustering algorithm was previously trained on 2D examples.
 
-The first problem that arise when trying to deal with our map is that it is far too heavy to carry real-time operations - the raw map is about 40M 3D colored points. We therefore begin by reducing that number by applying the following operations: 
+The first problem that arise when trying to deal with our map is that it is far too heavy to carry real-time operations - the raw map is about 40M 3D colored points. We therefore begin our process by applying the following operations to reduce that number:
 
 \begin{description}
     \item[Cropping of farthest points] Points that are too far away from the median depth are suppressed from the cloud. These noisy points are artifacts generated by a local error in depth estimation and are pointless for our study.
@@ -137,10 +145,10 @@ The first problem that arise when trying to deal with our map is that it is far 
 
     \item[Walls detection and extraction] For each axis, we detect the walls as the largest plane normal to that axis with 20$^\circ$ tolerance and remove them. Plane detection is done using the RANSAC algorithm \cite{RANSAC}, and no extraction is performed if that detected plane is too small, for it can mean that no wall is present on the image and another object was detected instead.
 
-    \item[Transformation of the data into a Kd-tree] PCL point cloud are an unordered data structure by default, and can simply be accessed by calling their index ranging from 0 to the point cloud size. While this characteristic makes them very convenient to manipulate to apply simple algorithms on them, it considerably slows down the process when an algorithm iterates several times on it. To speed up the next steps, we convert our raw point cloud data into a Kd tree representation structure.
+    \item[Transformation of the data into a Kd-tree] PCL point cloud are an unordered data structure by default, and can simply be accessed by calling their index ranging from 0 to the point cloud size. While this characteristic makes them very convenient to manipulate to apply simple algorithms on them, it considerably slows down the process when an algorithm iterates several times on it. To speed up the next steps, we convert our raw point cloud data into a Kd-tree representation structure. This representation is heavy to build, but the performance gain in interesting in the long run.
 \end{description}
 
-After these steps, the remaining point cloud size is in the order of 10 000 points, which is much more reasonable for real-time processing. We can then carry out object segmentation on it by using the Euclidean cluster extraction algorithm \cite{euclidean_cluster_extraction}. This type of segmentation performs well in extracting objects that are well-separated in the point cloud. However, it is not able to differentiate between objects that are touching each others, like several books on the same pile for example. Other types of segmentations can be used to tackle this problem, such as the Region growing segmentation algorithm \cite{region_growing_seg}. This technique is able to differentiate adjacent objects based on their mean curvature, however based on our test it tends to be too strict on its detection, which ends in one object being detected as several ones. 
+After these steps, the remaining point cloud size is in the order of 100 000 points, which is much more reasonable for real-time processing. We can then carry out object segmentation on it by using the Euclidean cluster extraction algorithm \cite{euclidean_cluster_extraction}. This type of segmentation performs well in extracting objects that are well-separated in the point cloud. However, it is not able to differentiate between objects that are touching each others, like several books on the same pile for example. Other types of segmentations can be used to tackle this problem, such as the Region growing segmentation algorithm \cite{region_growing_seg}. This technique is able to differentiate adjacent objects based on their mean curvature, however based on our test it tends to be too strict on its detection, which ends in one object being detected as several ones. 
 
 An ideal approach would be to average the result of several segmentation algorithm to obtain a fine-tuned object segmentation, but this method is very computationally expensive and does not scale well for real-time applications. Therefore, we prefer to use euclidean cluster extraction since it runs more quickly and identifies a reasonable number of objects. Of course, using more complex object segmentation algorithms that can run in real-time in the future may improve the results of our technique, and me valuable as a future work.
 
@@ -179,10 +187,10 @@ To that end, we developed a ROS node that subscribes to both the 2D ($x_{pixel},
 \end{algorithm}
 
 \section{3D Human-Object Interactions}
-In this part, we will describe how we detect human/object interaction and how we adapt our pre-trained SOINN model to make it use these interaction as additional input.
+In this part, we describe how we detect human/object interaction and how we adapt our pre-trained SOINN model to make it use these interaction as additional input.
 
 \subsection{Interaction Detection}
-In this work, our detection method is pretty straightforward. We simply define an interaction when one or more of the human body joint either touches or enters into the bounding box of a detected object. In order to conserve OpenPose multi-human detection ability, we define the data structure of an interaction as the combination of a OpenPose ROS human list and an object list. In that way, we are able to track human/object interaction in real-time no matter how many humans interact with any number of objects.
+In this work, our detection method is pretty straightforward. We simply define an interaction when one or more of the human body joint either touches or enters into the bounding box of a detected object. In order to conserve the multi-human detection ability of OpenPose, we define the data structure of an interaction as the combination of a OpenPose ROS human list and an object list. In that way, we are able to track human/object interaction in real-time no matter how many humans interact with any number of objects.
 
 \subsection{Pose-Interaction Clustering}
 \label{section:pose-interaction_clustering}
@@ -197,10 +205,9 @@ There are many ways to include the human/object interaction as an additional inf
     \item{How does a new signal alter the model ?}
 \end{enumerate}
 
-The main idea is to create a new SOINN model from our existing one. The nodes of this model have one more dimension than previously: added to the 28 first coordinates that represent the 2D pose coordinates for one person, we add the object id associated with this pose. Since this id ranges from 0 to the number of detected object -- 1, we initialize the last coordinate of our previous nodes to --1, as shown in Algorithm \ref{algo:new_nodes}.
+The main idea is to create a new SOINN model from our existing one. The nodes of this model have one more dimension than previously: added to the 28 first coordinates that represent the 2D pose body joints coordinates for one person, we add the object id associated with this pose. Since this id ranges from 0 to the number of detected object -- 1, we initialize the last coordinate of our previous nodes to --1, as shown in Algorithm \ref{algo:new_nodes}.
 
-\begin{algorithm}[H]
-    \label{algo:new_nodes}
+\begin{algorithm}
     \KwData{Node Set: A, number of nodes: $N_A$, previous signal dimension: n}
     \KwResult{SOINN-Interaction node set B}
     \ForEach{node $c \in A$}{
@@ -209,11 +216,12 @@ The main idea is to create a new SOINN model from our existing one. The nodes of
         c'[n] = --1 \\
         $B = B ~\cup$ c'}
     \caption{Creation of a SOINN-Interaction model from a classical SOINN model}
+    \label{algo:new_nodes}
 \end{algorithm}
 
 A new signal is given to the algorithm as input each time a new interaction is detected, and therefore contains both the body pose and human/object interaction informations. From there, another problem that arise is that it is no longer possible to compute the distance between new signals and existing nodes as we did before. Indeed, classical SOINN algorithm uses euclidean distance but our last coordinate is of course incompatible with that distance. 
 
-We propose to compute the distance between our new vectors as the previous euclidean distance between them from which we add a multiplicative penalty if the two objects are associated with different objects or a bonus if they are associated with the same object. If one of the two compared signal is not associated with an object yet, ie its last coordinate is --1, we just compute the euclidean distance like before. The new context distance we introduce is as follow:
+We propose to compute the distance between our new vectors as the previous euclidean distance between them from which we add a multiplicative penalty if the two objects are associated with different objects or a bonus if they are associated with the same object. If one of the two compared signal is not associated with an object yet, which means that its last coordinate is --1, we just compute the euclidean distance like before. The new context distance we introduce is as follow:
 
 \begin{equation}
     d_C(A, B) = K\cdot \sqrt{\sum_{k=0}^{n-2}(a_i-b_i)^2} 
@@ -227,11 +235,11 @@ with~K =
 \end{cases} 
 \]
 \\
-SOINN is now able to calculate the distance between an input signal and existing nodes as well as the distance between two existing nodes but we still have some modifications to make. Indeed, it cannot handle the nodes as before when it needs to modify its nodes. For instance the operation:
+Our modified SOINN is now able to calculate the distance between an input signal and existing nodes as well as the distance between two existing nodes but we still have some modifications to make. Indeed, it cannot handle the nodes as before when it needs to modify its nodes. For instance the operation:
 \begin{equation}
     \Delta W_{s1} = \epsilon \cdot (\xi - W_{s1})
 \end{equation}
-described in Appendix \ref{chap:soinn_original_algo} does not make sense for the last coordinate since it represents an index and not a measurable dimension. Therefore when we add a new signal to an existing node, we have to tell SOINN what to do in case their last coordinate are not the same and tell him which one it should choose for the new cluster centroid. 
+described in Appendix \ref{chap:soinn_original_algo} does not make sense for the last coordinate since it represents an index and not a measurable dimension. Therefore when we add a new signal to an existing node, we have to tell SOINN what to do in case their last coordinate are not the same and indicate which one it should choose for the new cluster centroid. 
 
 We propose the following strategy: we define a confidence score for each node that represent how much its interaction coordinate is reliable. We implement these scores as part of a new attribute list in our SOINN class. The confidence score is initialized to 0 for nodes loaded from previously trained SOINN model, and its evolution when a new signal comes out is detailed in algorithm \ref{algo:confidence}. 
 
@@ -257,8 +265,8 @@ The $\alpha$ parameter is new and defines a learning rate for the confidence sco
         $conf'=conf+\alpha \cdot N_{adj}$
     }}
     \textbf{return $W_i', ~conf'$}
-    \caption{Fusion of a new human/interaction signal in an existing node. $\epsilon$ is the same parameter as in the original SOINN model, and $\alpha$ is introduced in this version.}
+    \caption[Fusion of a new human/interaction signal in an existing node]{Fusion of a new human/interaction signal in an existing node. $\epsilon$ is the same parameter as in the original SOINN model, and $\alpha$ is introduced in this version.}
     \label{algo:confidence}
 \end{algorithm}
 
-These changes introduce three new parameters to our model: the bonus and malus parameters from our new distance function and the $\alpha$ parameter in Algorithm \ref{algo:confidence} that defines a kind of learning rate for the confidence score. We will explain in chapter \ref{chap:experiments} how we tuned these parameters to obtain better clustering results.
+These changes introduce three new parameters to our model: the bonus and malus parameters from our new distance function and the $\alpha$ parameter in Algorithm \ref{algo:confidence} that defines a learning rate for the confidence score. We will explain in chapter \ref{chap:experiments} how we tuned these parameters to obtain better clustering results.
